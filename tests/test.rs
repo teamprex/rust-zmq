@@ -491,6 +491,33 @@ test!(test_zmq_set_xpub_verbose, {
     }
 });
 
+test!(test_zmq_set_xpub_verboser, {
+    let ctx = Context::new();
+    let xpub = ctx.socket(XPUB).unwrap();
+    let subs = vec![ctx.socket(SUB).unwrap(), ctx.socket(SUB).unwrap()];
+
+    xpub.bind("inproc://set_xpub_verboser").unwrap();
+    xpub.set_xpub_verboser(true).unwrap();
+
+    for sub in subs.iter() {
+        sub.connect("inproc://set_xpub_verboser").unwrap();
+        sub.set_subscribe(b"topic").unwrap();
+
+        let event = xpub.recv_msg(0).unwrap();
+        assert_eq!(event[0], 1);
+        assert_eq!(&event[1..], b"topic");
+    }
+
+    for sub in subs {
+        sub.set_unsubscribe(b"topic").unwrap();
+
+        let event = xpub.recv_msg(0).unwrap();
+        assert_eq!(event[0], 0);
+        assert_eq!(&event[1..], b"topic");
+        assert_eq!(&event[1..], b"topic");
+    }
+});
+
 test!(test_zmq_xpub_welcome_msg, {
     let ctx = Context::new();
     let xpub = ctx.socket(XPUB).unwrap();
