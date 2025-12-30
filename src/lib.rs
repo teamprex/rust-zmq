@@ -677,6 +677,18 @@ impl Socket {
         Ok(())
     }
 
+    /// Stop monitoring the socket.
+    ///
+    /// This calls `zmq_socket_monitor(socket, NULL, 0)` internally,
+    /// which forces the ZMQ context to close the monitor socket and release resources.
+    /// This is essential to prevent resource leaks (u_str) when using monitors.
+    ///
+    /// See: https://github.com/zeromq/libzmq/issues/3575
+    pub fn stop_monitor(&self) -> Result<()> {
+        zmq_try!(unsafe { zmq_sys::zmq_socket_monitor(self.sock, ptr::null(), 0) });
+        Ok(())
+    }
+
     /// Send a message.
     ///
     /// Due to the provided `From` implementations, this works for
